@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Security.Cryptography.Xml;
@@ -16,34 +17,28 @@ namespace WebApiClient.Controllers
 			_logger = logger;
 		}
 		
-		public IActionResult Index()
+		public async Task<IActionResult> Index()
 		{
+			using (HttpClient client = new HttpClient())
+			{
+				HttpResponseMessage response = await client.GetAsync("https://dummyjson.com/todos");
+				if (response.IsSuccessStatusCode)
+				{
+					string jsonResponse = await response.Content.ReadAsStringAsync();
+                    var jsonObject = JsonConvert.DeserializeObject<dynamic>(jsonResponse);
+                    List<Todos> todos = JsonConvert.DeserializeObject<List<Todos>>(jsonObject.todos.ToString());
+                    return View(todos);
+                }
+			}
 
-			GetDataObjects();
-			return View();
+			return View("Error");
 		}
 		
-		public IEnumerable<DataObject> GetDataObjects()
-		{
-			using var client = new HttpClient();
-			client.BaseAddress = new Uri("https://dummyjson.com/todos"); // Add an Accept header for JSON format.
-			client.DefaultRequestHeaders.Accept.Add(
-			   new MediaTypeWithQualityHeaderValue("dummyjson.com/todos"));
-			// Get data response
-			var response = client.GetAsync("").Result;
-			if (response.IsSuccessStatusCode)
-			{
-				// Parse the response body
-				var dataObjects = response.Content.ReadAsAsync<IEnumerable<DataObject>>().Result;
-				foreach (var d in dataObjects)
-				{
-					Console.WriteLine("{0}", d.Name);
-				}
-			}
-			}
-		}
+		
+			
+		
 
-			public IActionResult Privacy()
+		public IActionResult Privacy()
 		{
 			return View();
 		}
