@@ -40,10 +40,6 @@ namespace WebApiClient.Controllers
 					Console.WriteLine("{0}", d.Name);
 				}
 			}
-			else
-			{
-				Console.WriteLine("{0} ({1})", (int)response.StatusCode,
-							  response.ReasonPhrase);
 			}
 		}
 
