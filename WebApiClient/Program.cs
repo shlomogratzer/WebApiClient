@@ -1,7 +1,16 @@
+using WebApiClient.Controllers;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// Add services to the container.
+builder.Services.AddHttpClient<UsersController>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7177/api/User/");
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
 
 var app = builder.Build();
 
@@ -22,6 +31,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
 	name: "default",
-	pattern: "{controller=Home}/{action=Index}/{id?}");
+	pattern: "{controller=Users}/{action=DetailsOfAll}");
 
 app.Run();
