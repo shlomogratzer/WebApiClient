@@ -1,14 +1,17 @@
-﻿namespace WebApiClient.Models
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace WebApiClient.Models
 {
-	public class Todos
-	{
-		public int Id { get; set; }
-		public string Todo { get; set; }
-		public bool Completed { get; set; }
-		public int UserId { get; set; }
-	}
-	public class TodosResponse
+    public class Todos
     {
-        public List<Todos> Todos { get; set; }
+        [Key]
+        public int Id { get; set; }
+        public string Title { get; set; }
+        public bool Status { get; set; }
+        public DateTime DueDate { get; set; }
+        public int Priority { get; set; }
+        [ForeignKey("User")]
+        public int UserId { get; set; }
     }
 }

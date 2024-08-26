@@ -8,7 +8,7 @@ builder.Services.AddControllersWithViews();
 // Add services to the container.
 builder.Services.AddHttpClient<UsersController>(client =>
 {
-    client.BaseAddress = new Uri("https://localhost:7177/api/User/");
+    client.BaseAddress = new Uri("https://localhost:7177/api/");
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 

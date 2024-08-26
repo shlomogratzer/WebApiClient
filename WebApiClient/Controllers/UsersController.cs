@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.DotNet.MSIdentity.Shared;
 using Newtonsoft.Json;
 using System.Diagnostics;
 using System.Net.Http;
@@ -7,6 +8,7 @@ using System.Security.Cryptography.Xml;
 using System.Security.Policy;
 using System.Text;
 using WebApiClient.Models;
+using System.Net.Http.Json;
 
 namespace WebApiClient.Controllers
 {
@@ -34,15 +36,108 @@ namespace WebApiClient.Controllers
             HttpResponseMessage response = await _httpClient.GetAsync("https://localhost:7177/api/User/users");
             string content = await response.Content.ReadAsStringAsync();
             var items = JsonConvert.DeserializeObject<List<User>>(content);
-            /*Task.Run(async () =>
-            {
-                HttpResponseMessage response = await _httpClient.GetAsync("https://localhost:7177/api/User/");//ניתוב לא שלם
-                string content = await response.Content.ReadAsStringAsync();
-                var items = JsonConvert.DeserializeObject<List<User>>(content);
-            });*/
+            
             return View(items);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> DetailsById(int id)
+        {
+            HttpResponseMessage response = await _httpClient.GetAsync($"https://localhost:7177/api/Todo/TodosByUser/{id}");
+            if (response.IsSuccessStatusCode)
+            {
+                string content = await response.Content.ReadAsStringAsync();
+                var item = JsonConvert.DeserializeObject<List<Todos>>(content);
+                ViewData["UserId"] = id;
+                return View(item);
+            }
+            else
+            {
+                // Handle the case where the user is not found or the request failed
+                return NotFound();
+            }
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Update(int id)
+        {
+            HttpResponseMessage response = await _httpClient.GetAsync($"https://localhost:7177/api/User/users/{id}");
+            string content = await response.Content.ReadAsStringAsync();
+            var items = JsonConvert.DeserializeObject<User>(content);
+            //ViewData["Id"] = id;
+            return View(items);
+        }
+        [HttpPost]
+        public async Task<IActionResult> UpdateUser(int Id, UserDto user)
+        {
+            if (ModelState.IsValid)
+            {
+                // Send the PUT request to the API
+                var response = await _httpClient.PutAsJsonAsync($"https://localhost:7177/api/User/users/{Id}", user);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    // Redirect to a different action (e.g., details view of the updated user)
+                    return RedirectToAction("DetailsOfAll");
+                }
+                else
+                {
+                    // Handle the case where the update failed
+                    ModelState.AddModelError("", "Failed to update user.");
+                }
+            }
+
+            // If we reach this point, something went wrong; return the view with the user data
+            return View(user);
+        }
+        
+        public async Task<IActionResult> DeleteUser(int id)
+        {
+            HttpResponseMessage response = await _httpClient.DeleteAsync($"https://localhost:7177/api/User/users/{id}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Redirect to the index or another list view after successful deletion
+                return RedirectToAction("DetailsOfAll");
+            }
+            else
+            {
+                // Handle the case where the deletion failed
+                ModelState.AddModelError("", "Failed to delete user.");
+                // Optionally, you could return a view that shows an error message
+                return RedirectToAction("DetailsOfAll");
+            }
+        }
+        public IActionResult CreateUser()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateUser(User user)
+        {
+            if (ModelState.IsValid)
+            {
+                HttpResponseMessage response = await _httpClient.PostAsJsonAsync("https://localhost:7177/api/User", user);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    // Redirect to a different action, such as the list of users
+                    return RedirectToAction("DetailsOfAll");
+                }
+                else
+                {
+                    // Handle the case where the creation failed
+                    ModelState.AddModelError("", "Failed to create user.");
+                }
+            }
+
+            // If we reach this point, something went wrong; return the view with the user data
+            return RedirectToAction("DetailsOfAll");
+        }
+
+        //----------------------------------------------
+        
         public async Task<IActionResult> Index()
 		{
 			using (HttpClient client = new HttpClient())
@@ -84,7 +179,7 @@ namespace WebApiClient.Controllers
             }
             return View("Error");
         }
-
+        
         [HttpPost]
         public async Task<IActionResult> UpdateTodo(int id,Todos tododto)
         {
@@ -93,7 +188,7 @@ namespace WebApiClient.Controllers
                 // Create the updated object
                 Todos updatedTodo = new Todos()
                 {
-                    Completed = tododto.Completed
+                    Status = tododto.Status,
                 };
 
                 // Convert the object to JSON
@@ -122,7 +217,7 @@ namespace WebApiClient.Controllers
 
 
 
-            public IActionResult Privacy()
+        public IActionResult Privacy()
 		{
 			return View();
 		}
